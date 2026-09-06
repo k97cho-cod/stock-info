@@ -3,7 +3,7 @@ import yfinance as yf
 import pandas as pd
 import plotly.graph_objects as go
 
-# 화면 넓게 설정 및 상하좌우 여백(Padding)을 대폭 축소
+# 화면 넓게 설정 및 상하좌우 여백(Padding) 타이트하게 조정
 st.set_page_config(page_title="종목 맞춤형 대시보드", layout="wide")
 
 st.markdown("""
@@ -57,8 +57,8 @@ with top_sub1:
         diff = abs(w60 - w200) / w200 * 100
         cond = "YES (10% 이내)" if diff <= 10 else f"NO ({diff:.2f}%)"
         
-        # 표 대신 원하시는 대로 한 줄 텍스트로 압축
-        tech_oneline = f"- **WMA 60-200 이격도:** {cond} (60일선: {w60:,.0f원} / 200일선: {w200:,.0f}원)"
+        # 한 줄 텍스트로 깔끔하게 압축 (오타 수정 완료)
+        tech_oneline = f"- **WMA 60-200 이격도:** {cond} (60일선: {w60:,.0f}원 / 200일선: {w200:,.0f}원)"
         st.markdown(tech_oneline)
 
 with top_sub2:

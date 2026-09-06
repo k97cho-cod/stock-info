@@ -29,7 +29,7 @@ except Exception as e:
     st.error(f"데이터 로드 오류: {e}")
     st.stop()
 
-# 좌우 비율 조정 (좌측 6, 우측 4 로 우측 차트 폭을 70% 수준으로 축소)
+# 좌우 비율 조정 (좌측 6, 우측 4)
 left_col, right_col = st.columns([6, 4], gap="small")
 
 with left_col:
@@ -46,7 +46,7 @@ with left_col:
     """
     st.markdown(summary_text)
     
-    # 2. 기술적 조건 검증 (간격을 좁히기 위해 3분할 컬럼을 타이트하게 구성)
+    # 2. 기술적 조건 검증 (간격을 좁게 붙이기 위해 컬럼 비율을 1:1:1로 타이트하게 설정)
     st.markdown("### 2. 기술적 조건 검증")
     if not hist.empty:
         close = hist['Close']
@@ -55,7 +55,7 @@ with left_col:
         diff = abs(w60 - w200) / w200 * 100
         cond = "YES (10% 이내)" if diff <= 10 else f"NO ({diff:.2f}%)"
         
-        tc1, tc2, tc3 = st.columns([1.2, 1.2, 1.2])
+        tc1, tc2, tc3 = st.columns([1, 1, 1])
         tc1.metric("WMA 60-200", cond)
         tc2.metric("WMA 60일", f"{w60:,.0f}원")
         tc3.metric("WMA 200일", f"{w200:,.0f}원")
@@ -70,7 +70,7 @@ with left_col:
         st.write("관련 뉴스가 없습니다.")
 
 with right_col:
-    # 3. 재무 및 밸류에이션 점차트 (상단 여백 제거, X축 글씨 선명하고 굵게)
+    # 3. 재무 및 밸류에이션 점차트
     st.markdown("### 3. 재무 및 밸류에이션 추이 (총 8개 지표 점차트)")
     
     fin_source = quarterly_fin if not quarterly_fin.empty else financials
@@ -99,7 +99,7 @@ with right_col:
                 title=dict(text=title_text, font=dict(size=11, color='black')),
                 margin=dict(l=2, r=2, t=20, b=2),
                 height=100,
-                xaxis=dict(showgrid=True, tickfont=dict(size=10, color='black', weight='bold')),
+                xaxis=dict(showgrid=True, tickfont=dict(size=10, color='black')),
                 yaxis=dict(showgrid=True, tickfont=dict(size=9, color='gray')),
                 paper_bgcolor='rgba(0,0,0,0)',
                 plot_bgcolor='rgba(0,0,0,0)'
@@ -122,7 +122,7 @@ with right_col:
             title=dict(text=title_text, font=dict(size=11, color='black')),
             margin=dict(l=2, r=2, t=20, b=2),
             height=100,
-            xaxis=dict(showgrid=True, tickfont=dict(size=10, color='black', weight='bold')),
+            xaxis=dict(showgrid=True, tickfont=dict(size=10, color='black')),
             yaxis=dict(showgrid=True, tickfont=dict(size=9, color='gray')),
             paper_bgcolor='rgba(0,0,0,0)',
             plot_bgcolor='rgba(0,0,0,0)'

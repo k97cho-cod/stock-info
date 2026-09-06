@@ -57,8 +57,8 @@ with top_sub1:
         diff = abs(w60 - w200) / w200 * 100
         cond = "YES (10% 이내)" if diff <= 10 else f"NO ({diff:.2f}%)"
         
-        # 한 줄 텍스트로 깔끔하게 압축 (오타 수정 완료)
-        tech_oneline = f"- **WMA 60-200 이격도:** {cond} (60일선: {w60:,.0f}원 / 200일선: {w200:,.0f}원)"
+        # 요청하신 대로 괄호 안의 가격 정보(일선 가격)를 삭제하고 이격도 내용만 깔끔하게 출력
+        tech_oneline = f"- **WMA 60-200 이격도:** {cond}"
         st.markdown(tech_oneline)
 
 with top_sub2:

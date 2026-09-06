@@ -3,22 +3,19 @@ import yfinance as yf
 import pandas as pd
 import plotly.graph_objects as go
 
-# 화면 넓게 설정 및 패딩 타이트하게 조정
+# 화면 넓게 설정 및 상하좌우 여백(Padding)을 대폭 축소
 st.set_page_config(page_title="종목 맞춤형 대시보드", layout="wide")
 
 st.markdown("""
     <style>
-        .block-container { padding-top: 0.2rem; padding-bottom: 0.5rem; padding-left: 1rem; padding-right: 1rem; }
-        h3 { font-size: 1rem !important; margin-top: 0.5rem !important; margin-bottom: 0.2rem !important; }
-        p, div, span { font-size: 0.8rem !important; }
-        .tech-table { width: auto; border-collapse: collapse; margin-top: 0.2rem; }
-        .tech-table th, .tech-table td { padding: 4px 16px 4px 0px; text-align: left; font-size: 0.8rem; }
-        .tech-table th { color: #555; font-weight: normal; }
-        .tech-table td { font-weight: bold; }
+        .block-container { padding-top: 0.1rem; padding-bottom: 0.2rem; padding-left: 0.8rem; padding-right: 0.8rem; }
+        h3 { font-size: 0.9rem !important; margin-top: 0.2rem !important; margin-bottom: 0.1rem !important; }
+        p, div, span { font-size: 0.8rem !important; margin-bottom: 0.2rem !important; }
+        hr { margin-top: 0.3rem !important; margin-bottom: 0.3rem !important; }
     </style>
 """, unsafe_allow_html=True)
 
-# 1. 맨 위: 종목코드 입력창 한 줄 배치
+# 1. 맨 위: 종목코드 입력창 한 줄 컴팩트 배치
 ticker_symbol = st.text_input("종목코드 입력 (예: 009070.KS)", "009070.KS")
 
 try:
@@ -34,7 +31,7 @@ except Exception as e:
     st.stop()
 
 # ==========================================
-# [상단 영역] 전체 폭 활용 (1번, 2번, 4번 순서대로 가로 정렬)
+# [상단 영역] 여백을 줄이고 압축 배치
 # ==========================================
 
 # 1. 기업 개요 및 주요 수익원 (3줄 요약)
@@ -48,11 +45,10 @@ summary_text = f"""
 """
 st.markdown(summary_text)
 
-# 2번과 4번을 좌우로 나란히 배치하여 공간 활용도 극대화
+# 2번(기술적 조건)과 4번(최근 뉴스)을 좌우로 배치해 세로 공간 절약
 top_sub1, top_sub2 = st.columns([5, 5], gap="medium")
 
 with top_sub1:
-    # 2. 기술적 조건 검증
     st.markdown("### 2. 기술적 조건 검증")
     if not hist.empty:
         close = hist['Close']
@@ -61,24 +57,11 @@ with top_sub1:
         diff = abs(w60 - w200) / w200 * 100
         cond = "YES (10% 이내)" if diff <= 10 else f"NO ({diff:.2f}%)"
         
-        tech_html = f"""
-        <table class="tech-table">
-            <tr>
-                <th>WMA 60-200</th>
-                <th>WMA 60일</th>
-                <th>WMA 200일</th>
-            </tr>
-            <tr>
-                <td>{cond}</td>
-                <td>{w60:,.0f}원</td>
-                <td>{w200:,.0f}원</td>
-            </tr>
-        </table>
-        """
-        st.markdown(tech_html, unsafe_allow_html=True)
+        # 표 대신 원하시는 대로 한 줄 텍스트로 압축
+        tech_oneline = f"- **WMA 60-200 이격도:** {cond} (60일선: {w60:,.0f원} / 200일선: {w200:,.0f}원)"
+        st.markdown(tech_oneline)
 
 with top_sub2:
-    # 4. 최근 주요 뉴스 (제목 포함 3줄)
     st.markdown("### 4. 최근 주요 뉴스")
     news_items = stock.news
     if news_items:
@@ -90,7 +73,7 @@ with top_sub2:
 st.markdown("---")
 
 # ==========================================
-# [하단 영역] 3. 재무 및 밸류에이션 차트 (전체 폭에서 좌우 4개씩 분할)
+# [하단 영역] 3. 재무 및 밸류에이션 차트 (좌우 4개씩 분할)
 # ==========================================
 st.markdown("### 3. 재무 및 밸류에이션 추이 (총 8개 지표 점차트)")
 
@@ -140,7 +123,6 @@ def draw_chart_box(df, col_name, title_text, color_code, scale=1.0, unit_str='�
     )
     st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
 
-# 하단을 좌우 2열로 나누어 각각 4개씩 배치
 chart_col1, chart_col2 = st.columns(2, gap="medium")
 
 with chart_col1:

@@ -8,8 +8,8 @@ st.set_page_config(page_title="종목 맞춤형 대시보드", layout="wide")
 
 st.markdown("""
     <style>
-        .block-container { padding-top: 0.4rem; padding-bottom: 0.5rem; padding-left: 1rem; padding-right: 1rem; }
-        h3 { font-size: 1rem !important; margin-top: 0rem !important; margin-bottom: 0.2rem !important; }
+        .block-container { padding-top: 0.2rem; padding-bottom: 0.5rem; padding-left: 1rem; padding-right: 1rem; }
+        h3 { font-size: 1rem !important; margin-top: 0rem !important; margin-bottom: 0.1rem !important; }
         p, div, span { font-size: 0.8rem !important; }
     </style>
 """, unsafe_allow_html=True)
@@ -29,8 +29,8 @@ except Exception as e:
     st.error(f"데이터 로드 오류: {e}")
     st.stop()
 
-# 좌우 비율을 5.5 : 4.5 로 조정하여 우측 차트 폭을 좁힘
-left_col, right_col = st.columns([5.5, 4.5], gap="medium")
+# 좌우 비율 조정 (좌측 6, 우측 4 로 우측 차트 폭을 70% 수준으로 축소)
+left_col, right_col = st.columns([6, 4], gap="small")
 
 with left_col:
     # 1. 기업 개요 및 주요 수익원
@@ -46,7 +46,7 @@ with left_col:
     """
     st.markdown(summary_text)
     
-    # 2. 기술적 조건 검증
+    # 2. 기술적 조건 검증 (간격을 좁히기 위해 3분할 컬럼을 타이트하게 구성)
     st.markdown("### 2. 기술적 조건 검증")
     if not hist.empty:
         close = hist['Close']
@@ -55,10 +55,10 @@ with left_col:
         diff = abs(w60 - w200) / w200 * 100
         cond = "YES (10% 이내)" if diff <= 10 else f"NO ({diff:.2f}%)"
         
-        c1, c2, c3 = st.columns(3)
-        c1.metric("WMA 60-200", cond)
-        c2.metric("WMA 60일", f"{w60:,.0f}원")
-        c3.metric("WMA 200일", f"{w200:,.0f}원")
+        tc1, tc2, tc3 = st.columns([1.2, 1.2, 1.2])
+        tc1.metric("WMA 60-200", cond)
+        tc2.metric("WMA 60일", f"{w60:,.0f}원")
+        tc3.metric("WMA 200일", f"{w200:,.0f}원")
 
     # 4. 최근 주요 뉴스
     st.markdown("### 4. 최근 주요 뉴스")
@@ -70,7 +70,7 @@ with left_col:
         st.write("관련 뉴스가 없습니다.")
 
 with right_col:
-    # 3. 재무 및 밸류에이션 점차트 (상단 여백 없이 바로 시작, 글자 크기 2배 확대)
+    # 3. 재무 및 밸류에이션 점차트 (상단 여백 제거, X축 글씨 선명하고 굵게)
     st.markdown("### 3. 재무 및 밸류에이션 추이 (총 8개 지표 점차트)")
     
     fin_source = quarterly_fin if not quarterly_fin.empty else financials
@@ -91,16 +91,16 @@ with right_col:
                 mode='lines+markers+text',
                 text=sub_df[col_name].round(1).astype(str) + unit_str,
                 textposition='top center',
-                textfont=dict(size=13, color='black'), # 글씨 크기 2배 확대 (8 -> 13)
+                textfont=dict(size=12, color='black', family="Arial Black"),
                 line=dict(color=color_code, width=2),
                 marker=dict(size=7)
             ))
             fig.update_layout(
-                title=dict(text=title_text, font=dict(size=12, color='black')),
-                margin=dict(l=5, r=5, t=25, b=5),
-                height=110,
-                xaxis=dict(showgrid=True, tickfont=dict(size=11)), # 축 글씨 확대
-                yaxis=dict(showgrid=True, tickfont=dict(size=11)),
+                title=dict(text=title_text, font=dict(size=11, color='black')),
+                margin=dict(l=2, r=2, t=20, b=2),
+                height=100,
+                xaxis=dict(showgrid=True, tickfont=dict(size=10, color='black', weight='bold')),
+                yaxis=dict(showgrid=True, tickfont=dict(size=9, color='gray')),
                 paper_bgcolor='rgba(0,0,0,0)',
                 plot_bgcolor='rgba(0,0,0,0)'
             )
@@ -114,16 +114,16 @@ with right_col:
             mode='lines+markers+text',
             text=values.round(1).astype(str) + unit_str,
             textposition='top center',
-            textfont=dict(size=13, color='black'), # 글씨 크기 2배 확대 (8 -> 13)
+            textfont=dict(size=12, color='black', family="Arial Black"),
             line=dict(color=color_code, width=2),
             marker=dict(size=7)
         ))
         fig.update_layout(
-            title=dict(text=title_text, font=dict(size=12, color='black')),
-            margin=dict(l=5, r=5, t=25, b=5),
-            height=110,
-            xaxis=dict(showgrid=True, tickfont=dict(size=11)),
-            yaxis=dict(showgrid=True, tickfont=dict(size=11)),
+            title=dict(text=title_text, font=dict(size=11, color='black')),
+            margin=dict(l=2, r=2, t=20, b=2),
+            height=100,
+            xaxis=dict(showgrid=True, tickfont=dict(size=10, color='black', weight='bold')),
+            yaxis=dict(showgrid=True, tickfont=dict(size=9, color='gray')),
             paper_bgcolor='rgba(0,0,0,0)',
             plot_bgcolor='rgba(0,0,0,0)'
         )

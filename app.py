@@ -57,7 +57,6 @@ with top_sub1:
         diff = abs(w60 - w200) / w200 * 100
         cond = "YES (10% 이내)" if diff <= 10 else f"NO ({diff:.2f}%)"
         
-        # 요청하신 대로 괄호 안의 가격 정보(일선 가격)를 삭제하고 이격도 내용만 깔끔하게 출력
         tech_oneline = f"- **WMA 60-200 이격도:** {cond}"
         st.markdown(tech_oneline)
 
@@ -73,7 +72,7 @@ with top_sub2:
 st.markdown("---")
 
 # ==========================================
-# [하단 영역] 3. 재무 및 밸류에이션 차트 (좌우 4개씩 분할)
+# [하단 영역] 3. 재무 및 밸류에이션 차트 (4개 열로 분할하여 한 줄에 2개씩 배치)
 # ==========================================
 st.markdown("### 3. 재무 및 밸류에이션 추이 (총 8개 지표 점차트)")
 
@@ -95,9 +94,9 @@ def draw_chart_box(df, col_name, title_text, color_code, scale=1.0, unit_str='�
                 mode='lines+markers+text',
                 text=sub_df[col_name].round(1).astype(str) + unit_str,
                 textposition='top center',
-                textfont=dict(size=10, color='black', family="Arial Black"),
+                textfont=dict(size=9, color='black', family="Arial Black"),
                 line=dict(color=color_code, width=2),
-                marker=dict(size=5)
+                marker=dict(size=4)
             ))
     else:
         if idx is not None and values is not None:
@@ -107,39 +106,45 @@ def draw_chart_box(df, col_name, title_text, color_code, scale=1.0, unit_str='�
                 mode='lines+markers+text',
                 text=values.round(1).astype(str) + unit_str,
                 textposition='top center',
-                textfont=dict(size=10, color='black', family="Arial Black"),
+                textfont=dict(size=9, color='black', family="Arial Black"),
                 line=dict(color=color_code, width=2),
-                marker=dict(size=5)
+                marker=dict(size=4)
             ))
 
     fig.update_layout(
-        title=dict(text=title_text, font=dict(size=10, color='black')),
-        margin=dict(l=2, r=2, t=18, b=2),
-        height=85,
-        xaxis=dict(showgrid=True, tickfont=dict(size=8, color='black')),
-        yaxis=dict(showgrid=True, tickfont=dict(size=7, color='gray')),
+        title=dict(text=title_text, font=dict(size=9, color='black')),
+        margin=dict(l=2, r=2, t=16, b=2),
+        height=80,
+        xaxis=dict(showgrid=True, tickfont=dict(size=7, color='black')),
+        yaxis=dict(showgrid=True, tickfont=dict(size=6, color='gray')),
         paper_bgcolor='rgba(0,0,0,0)',
         plot_bgcolor='rgba(0,0,0,0)'
     )
     st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
 
-chart_col1, chart_col2 = st.columns(2, gap="medium")
+# 4개의 열을 생성하여 8개 지표를 각각 1개씩 배치 (한 줄에 2개씩 총 4행 구조가 되도록 구성)
+c1, c2, c3, c4 = st.columns(4, gap="small")
 
-with chart_col1:
+roe_val = info.get('returnOnEquity', 0.0902) * 100
+eps_val = info.get('trailingEps', 0)
+per_val = info.get('trailingPE', 0)
+pbr_val = info.get('priceToBook', 0)
+idx = fin_T.index.strftime('%Y-%m') if not fin_T.empty else None
+
+with c1:
     draw_chart_box(fin_T, 'Total Revenue', '🔹 매출액 (억원)', '#8e44ad', 1e8, '억')
     draw_chart_box(fin_T, 'Operating Income', '🔹 영업이익 (억원)', '#9b59b6', 1e8, '억')
+
+with c2:
     draw_chart_box(fin_T, 'Net Income', '🔹 당기순이익 (억원)', '#2980b9', 1e8, '억')
     draw_chart_box(bs_T, 'Total Liabilities Net Minority Interest', '🔹 부채총계 (억원)', '#e67e22', 1e8, '억')
 
-with chart_col2:
-    roe_val = info.get('returnOnEquity', 0.0902) * 100
-    eps_val = info.get('trailingEps', 0)
-    per_val = info.get('trailingPE', 0)
-    pbr_val = info.get('priceToBook', 0)
-
-    if not fin_T.empty:
-        idx = fin_T.index.strftime('%Y-%m')
+with c3:
+    if idx is not None:
         draw_chart_box(None, None, '🔹 ROE 추이 (%)', '#27ae60', 1.0, '%', True, idx, pd.Series([roe_val] * len(idx), index=idx))
         draw_chart_box(None, None, '🔹 EPS 추이 (원)', '#d35400', 1.0, '원', True, idx, pd.Series([eps_val] * len(idx), index=idx))
+
+with c4:
+    if idx is not None:
         draw_chart_box(None, None, '🔹 PER 추이 (배)', '#c0392b', 1.0, '배', True, idx, pd.Series([per_val] * len(idx), index=idx))
         draw_chart_box(None, None, '🔹 PBR 추이 (배)', '#16a085', 1.0, '배', True, idx, pd.Series([pbr_val] * len(idx), index=idx))

@@ -15,30 +15,29 @@ st.markdown("""
         .tech-table th, .tech-table td { padding: 4px 16px 4px 0px; text-align: left; font-size: 0.8rem; }
         .tech-table th { color: #555; font-weight: normal; }
         .tech-table td { font-weight: bold; }
-        /* 우측 영역을 최상단으로 바짝 끌어올리기 위한 마진 조정 */
-        .top-aligned { margin-top: -3.5rem; }
     </style>
 """, unsafe_allow_html=True)
 
 st.markdown("### 📊 맞춤형 종목 분석 대시보드")
-ticker_symbol = st.text_input("종목코드 입력 (예: 009070.KS)", "009070.KS")
 
-try:
-    stock = yf.Ticker(ticker_symbol)
-    hist = stock.history(period="1y")
-    info = stock.info
-    financials = stock.financials
-    quarterly_fin = stock.quarterly_financials
-    balance_sheet = stock.balance_sheet
-    quarterly_bs = stock.quarterly_balance_sheet
-except Exception as e:
-    st.error(f"데이터 로드 오류: {e}")
-    st.stop()
-
-# 종목 입력창과 콘텐츠 영역을 완전히 분리하기 위해 상단 여백 확보용 빈 줄 제거 및 레이아웃 분할
-left_col, right_col = st.columns([5.5, 4.5], gap="small")
+# 좌우 컬럼을 최상단(입력창 포함)부터 나누어 우측 차트가 맨 위로 올라가도록 수정
+left_col, right_col = st.columns([6, 4], gap="small")
 
 with left_col:
+    ticker_symbol = st.text_input("종목코드 입력 (예: 009070.KS)", "009070.KS")
+    
+    try:
+        stock = yf.Ticker(ticker_symbol)
+        hist = stock.history(period="1y")
+        info = stock.info
+        financials = stock.financials
+        quarterly_fin = stock.quarterly_financials
+        balance_sheet = stock.balance_sheet
+        quarterly_bs = stock.quarterly_balance_sheet
+    except Exception as e:
+        st.error(f"데이터 로드 오류: {e}")
+        st.stop()
+
     # 1. 기업 개요 및 주요 수익원
     st.markdown("### 1. 기업 개요 및 주요 수익원")
     name = info.get('longName', ticker_symbol)
@@ -87,8 +86,17 @@ with left_col:
         st.write("관련 뉴스가 없습니다.")
 
 with right_col:
-    # 3. 재무 및 밸류에이션 점차트 (상단 마진을 끌어올려 독립적으로 배치)
-    st.markdown('<div class="top-aligned">', unsafe_allow_html=True)
+    try:
+        stock = yf.Ticker(ticker_symbol)
+        quarterly_fin = stock.quarterly_financials
+        financials = stock.financials
+        quarterly_bs = stock.quarterly_balance_sheet
+        balance_sheet = stock.balance_sheet
+        info = stock.info
+    except:
+        pass
+
+    # 3. 재무 및 밸류에이션 점차트 (최상단부터 바로 시작)
     st.markdown("### 3. 재무 및 밸류에이션 추이 (총 8개 지표 점차트)")
     
     fin_source = quarterly_fin if not quarterly_fin.empty else financials
@@ -166,5 +174,3 @@ with right_col:
         draw_val_chart(idx, pd.Series([eps_val] * len(idx), index=idx), '🔹 EPS 추이 (원)', '#d35400', '원')
         draw_val_chart(idx, pd.Series([per_val] * len(idx), index=idx), '🔹 PER 추이 (배)', '#c0392b', '배')
         draw_val_chart(idx, pd.Series([pbr_val] * len(idx), index=idx), '🔹 PBR 추이 (배)', '#16a085', '배')
-    
-    st.markdown('</div>', unsafe_allow_html=True)

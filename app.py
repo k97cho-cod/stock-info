@@ -12,6 +12,7 @@ st.markdown("""
         h3 { font-size: 0.9rem !important; margin-top: 0.2rem !important; margin-bottom: 0.1rem !important; }
         p, div, span { font-size: 0.8rem !important; margin-bottom: 0.2rem !important; }
         hr { margin-top: 0.3rem !important; margin-bottom: 0.3rem !important; }
+        .chart-spacer { height: 15px; }
     </style>
 """, unsafe_allow_html=True)
 
@@ -72,7 +73,7 @@ with top_sub2:
 st.markdown("---")
 
 # ==========================================
-# [하단 영역] 3. 재무 및 밸류에이션 차트 (4개 열로 분할하여 한 줄에 2개씩 배치)
+# [하단 영역] 3. 재무 및 밸류에이션 차트 (4개 열로 분할, 높이 및 가독성 개선)
 # ==========================================
 st.markdown("### 3. 재무 및 밸류에이션 추이 (총 8개 지표 점차트)")
 
@@ -94,9 +95,9 @@ def draw_chart_box(df, col_name, title_text, color_code, scale=1.0, unit_str='�
                 mode='lines+markers+text',
                 text=sub_df[col_name].round(1).astype(str) + unit_str,
                 textposition='top center',
-                textfont=dict(size=9, color='black', family="Arial Black"),
-                line=dict(color=color_code, width=2),
-                marker=dict(size=4)
+                textfont=dict(size=11, color='black', family="Arial Black"),
+                line=dict(color=color_code, width=2.5),
+                marker=dict(size=6)
             ))
     else:
         if idx is not None and values is not None:
@@ -106,23 +107,23 @@ def draw_chart_box(df, col_name, title_text, color_code, scale=1.0, unit_str='�
                 mode='lines+markers+text',
                 text=values.round(1).astype(str) + unit_str,
                 textposition='top center',
-                textfont=dict(size=9, color='black', family="Arial Black"),
-                line=dict(color=color_code, width=2),
-                marker=dict(size=4)
+                textfont=dict(size=11, color='black', family="Arial Black"),
+                line=dict(color=color_code, width=2.5),
+                marker=dict(size=6)
             ))
 
+    # 상단 글씨 잘림 방지를 위해 height를 늘리고 윗간격(t 마진) 확보
     fig.update_layout(
-        title=dict(text=title_text, font=dict(size=9, color='black')),
-        margin=dict(l=2, r=2, t=16, b=2),
-        height=80,
-        xaxis=dict(showgrid=True, tickfont=dict(size=7, color='black')),
-        yaxis=dict(showgrid=True, tickfont=dict(size=6, color='gray')),
+        title=dict(text=title_text, font=dict(size=11, color='black')),
+        margin=dict(l=5, r=5, t=25, b=5),
+        height=110,
+        xaxis=dict(showgrid=True, tickfont=dict(size=9, color='black')),
+        yaxis=dict(showgrid=True, tickfont=dict(size=8, color='gray')),
         paper_bgcolor='rgba(0,0,0,0)',
         plot_bgcolor='rgba(0,0,0,0)'
     )
     st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
 
-# 4개의 열을 생성하여 8개 지표를 각각 1개씩 배치 (한 줄에 2개씩 총 4행 구조가 되도록 구성)
 c1, c2, c3, c4 = st.columns(4, gap="small")
 
 roe_val = info.get('returnOnEquity', 0.0902) * 100
@@ -133,18 +134,22 @@ idx = fin_T.index.strftime('%Y-%m') if not fin_T.empty else None
 
 with c1:
     draw_chart_box(fin_T, 'Total Revenue', '🔹 매출액 (억원)', '#8e44ad', 1e8, '억')
+    st.markdown('<div class="chart-spacer"></div>', unsafe_allow_html=True)
     draw_chart_box(fin_T, 'Operating Income', '🔹 영업이익 (억원)', '#9b59b6', 1e8, '억')
 
 with c2:
     draw_chart_box(fin_T, 'Net Income', '🔹 당기순이익 (억원)', '#2980b9', 1e8, '억')
+    st.markdown('<div class="chart-spacer"></div>', unsafe_allow_html=True)
     draw_chart_box(bs_T, 'Total Liabilities Net Minority Interest', '🔹 부채총계 (억원)', '#e67e22', 1e8, '억')
 
 with c3:
     if idx is not None:
         draw_chart_box(None, None, '🔹 ROE 추이 (%)', '#27ae60', 1.0, '%', True, idx, pd.Series([roe_val] * len(idx), index=idx))
+        st.markdown('<div class="chart-spacer"></div>', unsafe_allow_html=True)
         draw_chart_box(None, None, '🔹 EPS 추이 (원)', '#d35400', 1.0, '원', True, idx, pd.Series([eps_val] * len(idx), index=idx))
 
 with c4:
     if idx is not None:
         draw_chart_box(None, None, '🔹 PER 추이 (배)', '#c0392b', 1.0, '배', True, idx, pd.Series([per_val] * len(idx), index=idx))
+        st.markdown('<div class="chart-spacer"></div>', unsafe_allow_html=True)
         draw_chart_box(None, None, '🔹 PBR 추이 (배)', '#16a085', 1.0, '배', True, idx, pd.Series([pbr_val] * len(idx), index=idx))

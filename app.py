@@ -11,6 +11,11 @@ st.markdown("""
         .block-container { padding-top: 0.2rem; padding-bottom: 0.5rem; padding-left: 1rem; padding-right: 1rem; }
         h3 { font-size: 1rem !important; margin-top: 0rem !important; margin-bottom: 0.1rem !important; }
         p, div, span { font-size: 0.8rem !important; }
+        /* 기술적 조건 검증 테이블 간격 좁히기 */
+        .tech-table { width: auto; border-collapse: collapse; margin-top: 0.2rem; }
+        .tech-table th, .tech-table td { padding: 4px 16px 4px 0px; text-align: left; font-size: 0.8rem; }
+        .tech-table th { color: #555; font-weight: normal; }
+        .tech-table td { font-weight: bold; }
     </style>
 """, unsafe_allow_html=True)
 
@@ -46,7 +51,7 @@ with left_col:
     """
     st.markdown(summary_text)
     
-    # 2. 기술적 조건 검증 (간격을 좁게 붙이기 위해 컬럼 비율을 1:1:1로 타이트하게 설정)
+    # 2. 기술적 조건 검증 (HTML 테이블로 간격 밀착)
     st.markdown("### 2. 기술적 조건 검증")
     if not hist.empty:
         close = hist['Close']
@@ -55,10 +60,21 @@ with left_col:
         diff = abs(w60 - w200) / w200 * 100
         cond = "YES (10% 이내)" if diff <= 10 else f"NO ({diff:.2f}%)"
         
-        tc1, tc2, tc3 = st.columns([1, 1, 1])
-        tc1.metric("WMA 60-200", cond)
-        tc2.metric("WMA 60일", f"{w60:,.0f}원")
-        tc3.metric("WMA 200일", f"{w200:,.0f}원")
+        tech_html = f"""
+        <table class="tech-table">
+            <tr>
+                <th>WMA 60-200</th>
+                <th>WMA 60일</th>
+                <th>WMA 200일</th>
+            </tr>
+            <tr>
+                <td>{cond}</td>
+                <td>{w60:,.0f}원</td>
+                <td>{w200:,.0f}원</td>
+            </tr>
+        </table>
+        """
+        st.markdown(tech_html, unsafe_allow_html=True)
 
     # 4. 최근 주요 뉴스
     st.markdown("### 4. 최근 주요 뉴스")

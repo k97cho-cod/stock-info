@@ -18,7 +18,7 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# 1. 상단: 종목코드 입력창 한 줄 배치
+# 1. 맨 위: 종목코드 입력창 한 줄 배치
 ticker_symbol = st.text_input("종목코드 입력 (예: 009070.KS)", "009070.KS")
 
 try:
@@ -33,7 +33,11 @@ except Exception as e:
     st.error(f"데이터 로드 오류: {e}")
     st.stop()
 
-# 2. 상단 전체 폭: 1. 기업 개요 및 주요 수익원 (3줄 요약 형태로 길게 배치)
+# ==========================================
+# [상단 영역] 전체 폭 활용 (1번, 2번, 4번 순서대로 가로 정렬)
+# ==========================================
+
+# 1. 기업 개요 및 주요 수익원 (3줄 요약)
 st.markdown("### 1. 기업 개요 및 주요 수익원")
 name = info.get('longName', ticker_symbol)
 sector = info.get('sector', '관련 산업')
@@ -44,13 +48,11 @@ summary_text = f"""
 """
 st.markdown(summary_text)
 
-st.markdown("---")
+# 2번과 4번을 좌우로 나란히 배치하여 공간 활용도 극대화
+top_sub1, top_sub2 = st.columns([5, 5], gap="medium")
 
-# 3. 하단 분할: 좌측(2번 기술적 조건 검증 + 4번 최근 주요 뉴스), 우측(3번 재무/밸류에이션 차트)
-col_left, col_right = st.columns([5, 5], gap="medium")
-
-with col_left:
-    # 2. 기술적 조건 검증 (한 줄에 다 보이도록 구성)
+with top_sub1:
+    # 2. 기술적 조건 검증
     st.markdown("### 2. 기술적 조건 검증")
     if not hist.empty:
         close = hist['Close']
@@ -75,7 +77,8 @@ with col_left:
         """
         st.markdown(tech_html, unsafe_allow_html=True)
 
-    # 4. 최근 주요 뉴스 (제목 포함 3줄 배치)
+with top_sub2:
+    # 4. 최근 주요 뉴스 (제목 포함 3줄)
     st.markdown("### 4. 최근 주요 뉴스")
     news_items = stock.news
     if news_items:
@@ -84,74 +87,77 @@ with col_left:
     else:
         st.write("관련 뉴스가 없습니다.")
 
-with col_right:
-    # 3. 재무 및 밸류에이션 추이 (좌우 4개씩 분할 배치)
-    st.markdown("### 3. 재무 및 밸류에이션 추이 (총 8개 지표 점차트)")
+st.markdown("---")
 
-    fin_source = quarterly_fin if not quarterly_fin.empty else financials
-    bs_source = quarterly_bs if not quarterly_bs.empty else balance_sheet
+# ==========================================
+# [하단 영역] 3. 재무 및 밸류에이션 차트 (전체 폭에서 좌우 4개씩 분할)
+# ==========================================
+st.markdown("### 3. 재무 및 밸류에이션 추이 (총 8개 지표 점차트)")
 
-    fin_T = fin_source.T[::-1] if not fin_source.empty else pd.DataFrame()
-    bs_T = bs_source.T[::-1] if not bs_source.empty else pd.DataFrame()
+fin_source = quarterly_fin if not quarterly_fin.empty else financials
+bs_source = quarterly_bs if not quarterly_bs.empty else balance_sheet
 
-    def draw_chart_box(df, col_name, title_text, color_code, scale=1.0, unit_str='억', is_val=False, idx=None, values=None):
-        fig = go.Figure()
-        if not is_val:
-            if not df.empty and col_name in df.columns:
-                sub_df = df[[col_name]].dropna()
-                sub_df[col_name] = sub_df[col_name] / scale
-                fig.add_trace(go.Scatter(
-                    x=sub_df.index.strftime('%Y-%m'), 
-                    y=sub_df[col_name],
-                    mode='lines+markers+text',
-                    text=sub_df[col_name].round(1).astype(str) + unit_str,
-                    textposition='top center',
-                    textfont=dict(size=10, color='black', family="Arial Black"),
-                    line=dict(color=color_code, width=2),
-                    marker=dict(size=5)
-                ))
-        else:
-            if idx is not None and values is not None:
-                fig.add_trace(go.Scatter(
-                    x=idx, 
-                    y=values,
-                    mode='lines+markers+text',
-                    text=values.round(1).astype(str) + unit_str,
-                    textposition='top center',
-                    textfont=dict(size=10, color='black', family="Arial Black"),
-                    line=dict(color=color_code, width=2),
-                    marker=dict(size=5)
-                ))
+fin_T = fin_source.T[::-1] if not fin_source.empty else pd.DataFrame()
+bs_T = bs_source.T[::-1] if not bs_source.empty else pd.DataFrame()
 
-        fig.update_layout(
-            title=dict(text=title_text, font=dict(size=10, color='black')),
-            margin=dict(l=2, r=2, t=18, b=2),
-            height=85,
-            xaxis=dict(showgrid=True, tickfont=dict(size=8, color='black')),
-            yaxis=dict(showgrid=True, tickfont=dict(size=7, color='gray')),
-            paper_bgcolor='rgba(0,0,0,0)',
-            plot_bgcolor='rgba(0,0,0,0)'
-        )
-        st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
+def draw_chart_box(df, col_name, title_text, color_code, scale=1.0, unit_str='억', is_val=False, idx=None, values=None):
+    fig = go.Figure()
+    if not is_val:
+        if not df.empty and col_name in df.columns:
+            sub_df = df[[col_name]].dropna()
+            sub_df[col_name] = sub_df[col_name] / scale
+            fig.add_trace(go.Scatter(
+                x=sub_df.index.strftime('%Y-%m'), 
+                y=sub_df[col_name],
+                mode='lines+markers+text',
+                text=sub_df[col_name].round(1).astype(str) + unit_str,
+                textposition='top center',
+                textfont=dict(size=10, color='black', family="Arial Black"),
+                line=dict(color=color_code, width=2),
+                marker=dict(size=5)
+            ))
+    else:
+        if idx is not None and values is not None:
+            fig.add_trace(go.Scatter(
+                x=idx, 
+                y=values,
+                mode='lines+markers+text',
+                text=values.round(1).astype(str) + unit_str,
+                textposition='top center',
+                textfont=dict(size=10, color='black', family="Arial Black"),
+                line=dict(color=color_code, width=2),
+                marker=dict(size=5)
+            ))
 
-    # 우측 내부를 다시 좌우 2열로 나누어 4개씩 배치
-    sub_c1, sub_c2 = st.columns(2, gap="small")
+    fig.update_layout(
+        title=dict(text=title_text, font=dict(size=10, color='black')),
+        margin=dict(l=2, r=2, t=18, b=2),
+        height=85,
+        xaxis=dict(showgrid=True, tickfont=dict(size=8, color='black')),
+        yaxis=dict(showgrid=True, tickfont=dict(size=7, color='gray')),
+        paper_bgcolor='rgba(0,0,0,0)',
+        plot_bgcolor='rgba(0,0,0,0)'
+    )
+    st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
 
-    with sub_c1:
-        draw_chart_box(fin_T, 'Total Revenue', '🔹 매출액 (억원)', '#8e44ad', 1e8, '억')
-        draw_chart_box(fin_T, 'Operating Income', '🔹 영업이익 (억원)', '#9b59b6', 1e8, '억')
-        draw_chart_box(fin_T, 'Net Income', '🔹 당기순이익 (억원)', '#2980b9', 1e8, '억')
-        draw_chart_box(bs_T, 'Total Liabilities Net Minority Interest', '🔹 부채총계 (억원)', '#e67e22', 1e8, '억')
+# 하단을 좌우 2열로 나누어 각각 4개씩 배치
+chart_col1, chart_col2 = st.columns(2, gap="medium")
 
-    with sub_c2:
-        roe_val = info.get('returnOnEquity', 0.0902) * 100
-        eps_val = info.get('trailingEps', 0)
-        per_val = info.get('trailingPE', 0)
-        pbr_val = info.get('priceToBook', 0)
+with chart_col1:
+    draw_chart_box(fin_T, 'Total Revenue', '🔹 매출액 (억원)', '#8e44ad', 1e8, '억')
+    draw_chart_box(fin_T, 'Operating Income', '🔹 영업이익 (억원)', '#9b59b6', 1e8, '억')
+    draw_chart_box(fin_T, 'Net Income', '🔹 당기순이익 (억원)', '#2980b9', 1e8, '억')
+    draw_chart_box(bs_T, 'Total Liabilities Net Minority Interest', '🔹 부채총계 (억원)', '#e67e22', 1e8, '억')
 
-        if not fin_T.empty:
-            idx = fin_T.index.strftime('%Y-%m')
-            draw_chart_box(None, None, '🔹 ROE 추이 (%)', '#27ae60', 1.0, '%', True, idx, pd.Series([roe_val] * len(idx), index=idx))
-            draw_chart_box(None, None, '🔹 EPS 추이 (원)', '#d35400', 1.0, '원', True, idx, pd.Series([eps_val] * len(idx), index=idx))
-            draw_chart_box(None, None, '🔹 PER 추이 (배)', '#c0392b', 1.0, '배', True, idx, pd.Series([per_val] * len(idx), index=idx))
-            draw_chart_box(None, None, '🔹 PBR 추이 (배)', '#16a085', 1.0, '배', True, idx, pd.Series([pbr_val] * len(idx), index=idx))
+with chart_col2:
+    roe_val = info.get('returnOnEquity', 0.0902) * 100
+    eps_val = info.get('trailingEps', 0)
+    per_val = info.get('trailingPE', 0)
+    pbr_val = info.get('priceToBook', 0)
+
+    if not fin_T.empty:
+        idx = fin_T.index.strftime('%Y-%m')
+        draw_chart_box(None, None, '🔹 ROE 추이 (%)', '#27ae60', 1.0, '%', True, idx, pd.Series([roe_val] * len(idx), index=idx))
+        draw_chart_box(None, None, '🔹 EPS 추이 (원)', '#d35400', 1.0, '원', True, idx, pd.Series([eps_val] * len(idx), index=idx))
+        draw_chart_box(None, None, '🔹 PER 추이 (배)', '#c0392b', 1.0, '배', True, idx, pd.Series([per_val] * len(idx), index=idx))
+        draw_chart_box(None, None, '🔹 PBR 추이 (배)', '#16a085', 1.0, '배', True, idx, pd.Series([pbr_val] * len(idx), index=idx))
